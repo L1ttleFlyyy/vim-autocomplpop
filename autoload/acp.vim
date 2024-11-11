@@ -19,18 +19,11 @@ function acp#enable()
   augroup AcpGlobalAutoCommand
     autocmd!
     autocmd InsertEnter * unlet! s:posLast s:lastUncompletable
+    autocmd InsertEnter * let  s:acpFirstEnt=1
     autocmd InsertLeave * call s:finishPopup(1)
   augroup END
 
-  if g:acp_mappingDriven
-    call s:mapForMappingDriven()
-  else
     autocmd AcpGlobalAutoCommand CursorMovedI * nested call s:feedPopup()
-  endif
-
-  nnoremap <silent> i i<C-r>=<SID>feedPopup()<CR>
-  nnoremap <silent> a a<C-r>=<SID>feedPopup()<CR>
-  nnoremap <silent> R R<C-r>=<SID>feedPopup()<CR>
 endfunction
 
 "
@@ -39,9 +32,6 @@ function acp#disable()
   augroup AcpGlobalAutoCommand
     autocmd!
   augroup END
-  nnoremap i <Nop> | nunmap i
-  nnoremap a <Nop> | nunmap a
-  nnoremap R <Nop> | nunmap R
 endfunction
 
 "
@@ -276,23 +266,6 @@ endfunction
 " LOCAL FUNCTIONS: {{{1
 
 "
-function s:mapForMappingDriven()
-  call s:unmapForMappingDriven()
-  let s:keysMappingDriven = [
-        \ 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-        \ 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-        \ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-        \ 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-        \ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-        \ '-', '_', '~', '^', '.', ',', ':', '!', '#', '=', '%', '$', '@', '<', '>', '/', '\',
-        \ '<Space>', '<C-h>', '<BS>', ]
-  for key in s:keysMappingDriven
-    execute printf('inoremap <silent> %s %s<C-r>=<SID>feedPopup()<CR>',
-          \        key, key)
-  endfor
-endfunction
-
-"
 function s:unmapForMappingDriven()
   if !exists('s:keysMappingDriven')
     return
@@ -372,6 +345,10 @@ endfunction
 
 "
 function s:feedPopup()
+  if s:acpFirstEnt > 0
+      let s:acpFirstEnt = 0
+      return ''
+  endif
   " NOTE: CursorMovedI is not triggered while the popup menu is visible. And
   "       it will be triggered when popup menu is disappeared.
   if s:lockCount > 0 || pumvisible() || &paste
@@ -401,9 +378,8 @@ function s:feedPopup()
   call l9#tempvariables#set(s:TEMP_VARIABLES_GROUP0,
         \ '&ignorecase', g:acp_ignorecaseOption)
   " NOTE: With CursorMovedI driven, Set 'lazyredraw' to avoid flickering.
-  "       With Mapping driven, set 'nolazyredraw' to make a popup menu visible.
   call l9#tempvariables#set(s:TEMP_VARIABLES_GROUP0,
-        \ '&lazyredraw', !g:acp_mappingDriven)
+        \ '&lazyredraw', 1)
   " NOTE: 'textwidth' must be restored after <C-e>.
   call l9#tempvariables#set(s:TEMP_VARIABLES_GROUP1,
         \ '&textwidth', 0)
@@ -469,6 +445,7 @@ let s:lockCount = 0
 let s:behavsCurrent = []
 let s:iBehavs = 0
 let s:snipItems = {}
+let s:acpFirstEnt = 0
 
 " }}}1
 "=============================================================================

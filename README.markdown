@@ -2,6 +2,11 @@
 
 Auto trigger complete popup menu.
 
+## Changes in this fork
+
+* Removed the sick popupmenu on the entry of INSERT mode
+* Removed mappingDriven mode as it is too intrusive and inject too many imaps
+
 ## Changes
 
 * Add default behavior for javascript, coffee, ls, css
